@@ -1227,13 +1227,16 @@ export function createGame({ scene, camera, gl, controls, house, chars, meta, la
     // hand (the Nintendo in her left), the others squeeze in behind her, clear of Papa's chair
     async function familySelfie() {
       const yaw = Math.PI;
-      place(sister, sx + 1.45, sy - 3.0, yaw);
-      place(maa, sx + 0.9, sy - 3.4, yaw);
-      place(player, sx + 1.55, sy - 3.4, yaw);
-      place(baba, sx + 2.15, sy - 3.4, yaw);
+      // one shoulder-to-shoulder row so every face is in the photo (nobody behind anybody):
+      // Papa, Maa, Bunu (a half step forward, holding the phone), Bhaiya at the end with his
+      // peace sign on the outside where it can't cover a face
+      place(baba, sx + 0.8, sy - 3.25, yaw);
+      place(maa, sx + 1.26, sy - 3.15, yaw);
+      place(sister, sx + 1.72, sy - 3.0, yaw);
+      place(player, sx + 2.2, sy - 3.1, yaw);
       player.lean = player.crouch = 0;
       player.pose = 'peace';
-      maa.pose = 'wave';
+      maa.pose = 'rest';
       baba.pose = 'rest';
       sister.pose = 'rest';
       releaseHold(sister);
@@ -1263,7 +1266,7 @@ export function createGame({ scene, camera, gl, controls, house, chars, meta, la
       for (const c of [player, sister, maa, baba]) c.lookAt = phone.position;   // (follows the phone)
       // first from the swing side (Papa's side, so Bhaiya isn't hidden behind her): Bunu with
       // her phone up, everyone squeezing in
-      shot(P(2.6, -0.9, 1.8), P(1.45, -3.2, 1.2));
+      shot(P(2.9, -0.9, 1.8), P(1.5, -3.15, 1.2));
       await sayAll(CONFIG.ceremony.byeSelfie);
       toast(CONFIG.ceremony.selfieToast, 1800);
       // then the phone's own view: just behind the phone and a little above it, centred on the
