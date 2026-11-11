@@ -1,0 +1,30 @@
+{
+ "bhaiya": {
+  "height": 1.72,
+  "forehead": 1.554,
+  "mouth": 1.371,
+  "headTop": 1.72,
+  "shoulder": 1.155
+ },
+ "honey": {
+  "height": 1.6,
+  "forehead": 1.47,
+  "mouth": 1.326,
+  "headTop": 1.6,
+  "shoulder": 1.138
+ },
+ "maa": {
+  "height": 1.55,
+  "forehead": 1.424,
+  "mouth": 1.285,
+  "headTop": 1.55,
+  "shoulder": 1.102
+ },
+ "baba": {
+  "height": 1.7,
+  "forehead": 1.551,
+  "mouth": 1.387,
+  "headTop": 1.7,
+  "shoulder": 1.181
+ }
+}

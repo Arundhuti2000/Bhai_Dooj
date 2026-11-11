@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bhai Phota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lav: #b9a3dc; --lav-d: #6d4fa3; --marigold: #ffa51f; --cream: #fff8ec;
+    --ink: #3b2a4d; --panel: rgba(255, 248, 236, 0.94);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #f6dcc4;
+    font-family: "Baloo Da 2", system-ui, sans-serif; color: var(--ink);
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center; padding: 16px; z-index: 20; }
+  .overlay.show { display: flex; }
+  #loading { background: linear-gradient(#ffe6c9, #f3cfe0); font-size: 22px; font-weight: 700; color: var(--lav-d); }
+  #title { background: radial-gradient(circle at 50% 35%, rgba(255,240,215,.9), rgba(214,190,240,.92)); }
+  #title h1 { font-size: clamp(44px, 11vw, 96px); margin: 0; line-height: 1; color: var(--lav-d);
+    text-shadow: 0 4px 0 #fff, 0 8px 18px rgba(109,79,163,.35); }
+  #title .sub { font-size: clamp(18px, 4.4vw, 26px); margin: 10px 0 4px; font-weight: 700; }
+  #title .help { font-size: 15px; opacity: .8; max-width: 440px; margin: 6px 0 22px; }
+  .garland { font-size: clamp(22px, 6vw, 38px); letter-spacing: 2px; margin-bottom: 8px; }
+  button.big { font: inherit; font-size: 24px; font-weight: 800; padding: 12px 38px; border: 0; border-radius: 999px;
+    background: var(--marigold); color: #fff; box-shadow: 0 6px 0 #d97a00, 0 10px 24px rgba(0,0,0,.18); cursor: pointer; }
+  button.big:active { transform: translateY(3px); box-shadow: 0 3px 0 #d97a00; }
+  button.alt { background: var(--lav); box-shadow: 0 6px 0 var(--lav-d); }
+
+  #hud { position: fixed; top: 10px; left: 0; right: 0; display: none; flex-direction: column; align-items: center;
+    gap: 6px; pointer-events: none; z-index: 5; padding: 0 16px; }
+  #hud.show { display: flex; }
+  #objective { background: var(--panel); padding: 4px 16px; border-radius: 999px; font-weight: 700; font-size: 17px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.12); max-width: 100%; }
+  #slots { display: flex; gap: 6px; }
+  .slot { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); display: flex; align-items: center;
+    justify-content: center; font-size: 26px; box-shadow: 0 3px 10px rgba(0,0,0,.12); filter: grayscale(1); opacity: .45;
+    transition: all .3s; }
+  .slot.got { filter: none; opacity: 1; transform: scale(1.08); box-shadow: 0 0 0 3px var(--marigold), 0 3px 10px rgba(0,0,0,.15); }
+
+  #toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); background: var(--panel);
+    padding: 10px 18px; border-radius: 16px; font-weight: 700; font-size: 18px; max-width: min(92vw, 560px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.15); display: none; z-index: 6; text-align: center; pointer-events: none; }
+  #toast.show { display: block; animation: pop .25s ease-out; }
+
+  #dialog { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(94vw, 640px);
+    background: var(--panel); border-radius: 22px; padding: 14px 18px 12px 92px; min-height: 96px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2); display: none; z-index: 10; cursor: pointer; border: 3px solid #fff; }
+  #dialog.show { display: block; animation: pop .25s ease-out; }
+  #dlgAvatar { position: absolute; left: 14px; top: 14px; width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 34px; border: 3px solid #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+  #dlgName { font-weight: 800; font-size: 19px; color: var(--lav-d); }
+  #dlgText { font-size: 19px; line-height: 1.3; min-height: 48px; }
+  #dlgNext { position: absolute; right: 16px; bottom: 8px; font-size: 14px; opacity: .6; animation: bob 1s infinite; }
+
+  #choice { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); display: none; flex-direction: column;
+    gap: 10px; z-index: 11; width: min(92vw, 460px); }
+  #choice.show { display: flex; animation: pop .25s ease-out; }
+  #choice button { font: inherit; font-weight: 800; font-size: 19px; padding: 12px 18px; border-radius: 16px; border: 3px solid #fff;
+    background: var(--panel); color: var(--ink); box-shadow: 0 6px 16px rgba(0,0,0,.18); cursor: pointer; }
+  #choice button:hover { background: #fff; }
+
+  #chant { position: fixed; left: 50%; top: 14%; transform: translateX(-50%); width: min(94vw, 620px);
+    background: rgba(255, 244, 222, .96); border-radius: 26px; padding: 18px 20px; text-align: center; display: none; z-index: 12;
+    border: 3px solid var(--marigold); box-shadow: 0 10px 30px rgba(0,0,0,.2); cursor: pointer; }
+  #chant.show { display: block; animation: pop .3s ease-out; }
+  #chant .bn { font-size: clamp(26px, 6.5vw, 40px); font-weight: 800; color: #b5462d; line-height: 1.25; }
+  #chant .en { font-size: 18px; opacity: .8; margin-top: 4px; font-style: italic; }
+  #chant .tap { font-size: 13px; opacity: .55; margin-top: 6px; }
+
+  #endcard { background: radial-gradient(circle at 50% 30%, rgba(255,241,214,.88), rgba(195,170,235,.9)); }
+  #endcard .card { background: var(--cream); border-radius: 28px; padding: 22px 22px 26px; max-width: 520px; width: 100%;
+    box-shadow: 0 16px 40px rgba(0,0,0,.25); border: 4px solid var(--marigold); }
+  #endcard h2 { font-size: clamp(32px, 8vw, 48px); margin: 4px 0 6px; color: var(--lav-d); line-height: 1.05; }
+  #endcard p { font-size: 19px; white-space: pre-line; margin: 8px 0 18px; }
+  #endcard .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  #endcard button.big { font-size: 19px; padding: 10px 24px; }
+
+  #stick { position: fixed; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.28);
+    border: 3px solid rgba(255,255,255,.6); display: none; z-index: 4; pointer-events: none; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%;
+    background: rgba(255,255,255,.85); box-shadow: 0 3px 8px rgba(0,0,0,.2); }
+  #hint { position: fixed; right: 12px; bottom: 10px; font-size: 13px; opacity: .7; z-index: 3; background: var(--panel);
+    padding: 3px 10px; border-radius: 10px; display: none; }
+  #err { position: fixed; left: 8px; right: 8px; bottom: 8px; max-height: 40%; overflow: auto; background: #300; color: #fdd;
+    font: 12px/1.3 monospace; padding: 8px; white-space: pre-wrap; display: none; z-index: 99; border-radius: 8px; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  #endcard.show .card, #title .card { animation: none; }
+  @keyframes bob { 50% { transform: translateY(-3px); } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="loading" class="overlay show">Building our house… 🏠</div>
+
+<div id="title" class="overlay">
+  <div class="garland">🌼🪔🌼🪔🌼🪔🌼</div>
+  <h1>Bhai Phota</h1>
+  <div class="sub" id="titleSub"></div>
+  <div class="help" id="titleHelp"></div>
+  <button class="big" id="startBtn">Start ▶</button>
+</div>
+
+<div id="hud">
+  <div id="objective"></div>
+  <div id="slots"></div>
+</div>
+<div id="toast"></div>
+
+<div id="dialog">
+  <div id="dlgAvatar"></div>
+  <div id="dlgName"></div>
+  <div id="dlgText"></div>
+  <div id="dlgNext">tap ▶</div>
+</div>
+<div id="choice"></div>
+<div id="chant"><div class="bn"></div><div class="en"></div><div class="tap">tap to continue</div></div>
+
+<div id="endcard" class="overlay">
+  <div class="card">
+    <div class="garland">🌼🪔🌼🪔🌼</div>
+    <h2 id="endTitle"></h2>
+    <p id="endMsg"></p>
+    <div class="row">
+      <button class="big" id="againBtn">Play again</button>
+      <button class="big alt" id="roamBtn">Walk around</button>
+    </div>
+  </div>
+</div>
+
+<div id="stick"><div id="knob"></div></div>
+<div id="hint"></div>
+<div id="err"></div>
+
+<script>
+  (function () {
+    var box = document.getElementById('err');
+    function show(m) { box.style.display = 'block'; box.textContent += m + '\n'; }
+    window.__showError = show;
+    window.addEventListener('error', function (e) { show((e.error && e.error.stack) || e.message); });
+    window.addEventListener('unhandledrejection', function (e) { show((e.reason && e.reason.stack) || String(e.reason)); });
+  })();
+</script>
+<script>/*__LAYOUT__*/</script>
+<script>/*__GLB__*/</script>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+/*__GAME__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+:root {
+  --lav: #b9a3dc;
+  --lav-d: #6d4fa3;
+  --marigold: #ffa51f;
+  --cream: #fff8ec;
+  --ink: #3b2a4d;
+  --panel: rgba(255, 248, 236, 0.94);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #f6dcc4; }
+body {
+  font-family: 'Baloo Da 2', system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+canvas { touch-action: none; display: block; }
+
+.overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 16px; z-index: 20; }
+.overlay.show { display: flex; }
+.loading { background: linear-gradient(#ffe6c9, #f3cfe0); font-size: 22px; font-weight: 700; color: var(--lav-d); gap: 12px; }
+.loading .bar { width: min(70vw, 320px); height: 10px; border-radius: 99px; background: rgba(109, 79, 163, 0.15); overflow: hidden; }
+.loading .bar div { height: 100%; background: var(--marigold); transition: width 0.2s; }
+
+.title { background: radial-gradient(circle at 50% 35%, rgba(255, 240, 215, 0.82), rgba(214, 190, 240, 0.78)); }
+.title h1 { font-size: clamp(44px, 11vw, 96px); margin: 0; line-height: 1; color: var(--lav-d); text-shadow: 0 4px 0 #fff, 0 8px 18px rgba(109, 79, 163, 0.35); }
+.title .sub { font-size: clamp(18px, 4.4vw, 26px); margin: 10px 0 4px; font-weight: 700; }
+.title .help { font-size: 15px; opacity: 0.85; max-width: 440px; margin: 6px 0 22px; }
+.garland { font-size: clamp(22px, 6vw, 38px); letter-spacing: 2px; margin-bottom: 8px; }
+
+button.big, a.big {
+  font: inherit; font-size: 22px; font-weight: 800; padding: 10px 32px; border: 0; border-radius: 999px;
+  background: var(--marigold); color: #fff; box-shadow: 0 6px 0 #d97a00, 0 10px 24px rgba(0, 0, 0, 0.18); cursor: pointer; text-decoration: none;
+}
+button.big:active, a.big:active { transform: translateY(3px); box-shadow: 0 3px 0 #d97a00; }
+button.alt, a.alt { background: var(--lav); box-shadow: 0 6px 0 var(--lav-d); }
+.row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+
+.hud { position: fixed; top: 10px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 5; padding: 0 16px; }
+.objective { background: var(--panel); padding: 4px 16px; border-radius: 999px; font-weight: 700; font-size: 17px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); max-width: 100%; }
+.slots { display: flex; gap: 6px; }
+.slot { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); filter: grayscale(1); opacity: 0.45; transition: all 0.3s; }
+.slot.got { filter: none; opacity: 1; transform: scale(1.08); box-shadow: 0 0 0 3px var(--marigold), 0 3px 10px rgba(0, 0, 0, 0.15); }
+.hint { position: fixed; right: 12px; bottom: 10px; font-size: 13px; opacity: 0.75; z-index: 3; background: var(--panel); padding: 3px 10px; border-radius: 10px; }
+
+.toast { position: fixed; left: 50%; top: 110px; transform: translateX(-50%); background: var(--panel); padding: 10px 18px; border-radius: 16px; font-weight: 700; font-size: 18px; max-width: min(92vw, 560px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); z-index: 6; text-align: center; pointer-events: none; animation: pop 0.25s ease-out; }
+
+.dialog { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(94vw, 640px); background: var(--panel); border-radius: 22px; padding: 14px 18px 12px 92px; min-height: 96px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); z-index: 10; cursor: pointer; border: 3px solid #fff; animation: pop 0.25s ease-out; }
+.dialog .avatar { position: absolute; left: 14px; top: 14px; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15); }
+.dialog .name { font-weight: 800; font-size: 19px; color: var(--lav-d); }
+.dialog .text { font-size: 19px; line-height: 1.3; min-height: 48px; }
+.dialog .next { position: absolute; right: 16px; bottom: 8px; font-size: 14px; opacity: 0.6; animation: bob 1s infinite; }
+
+.choice { position: fixed; left: 50%; bottom: 140px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 11; width: min(92vw, 460px); animation: pop 0.25s ease-out; }
+.choice button { font: inherit; font-weight: 800; font-size: 19px; padding: 12px 18px; border-radius: 16px; border: 3px solid #fff; background: var(--panel); color: var(--ink); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); cursor: pointer; }
+.choice button:hover { background: #fff; }
+
+.chant { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(94vw, 620px); background: rgba(255, 244, 222, 0.96); border-radius: 26px; padding: 18px 20px; text-align: center; z-index: 12; border: 3px solid var(--marigold); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); cursor: pointer; animation: pop 0.3s ease-out; }
+.chant .bn { font-size: clamp(26px, 6.5vw, 40px); font-weight: 800; color: #b5462d; line-height: 1.25; }
+.chant .en { font-size: 18px; opacity: 0.8; margin-top: 4px; font-style: italic; }
+.chant .tap { font-size: 13px; opacity: 0.55; margin-top: 6px; }
+
+.actions { position: fixed; right: 12px; bottom: 44px; display: flex; flex-direction: column; gap: 8px; z-index: 8; align-items: flex-end; }
+.actions button { font: inherit; font-weight: 800; font-size: 17px; padding: 8px 16px; border-radius: 14px; border: 3px solid #fff; background: var(--panel); color: var(--ink); box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18); cursor: pointer; animation: pop 0.2s ease-out; }
+.actions button.phota { background: var(--marigold); color: #fff; font-size: 20px; }
+.actions kbd { font: inherit; font-size: 12px; opacity: 0.6; border: 1px solid currentColor; border-radius: 5px; padding: 0 5px; margin-left: 4px; }
+@media (pointer: coarse) { .actions kbd { display: none; } }
+
+.stick { position: fixed; left: 22px; bottom: 26px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); border: 3px solid rgba(255, 255, 255, 0.7); z-index: 7; touch-action: none; display: flex; align-items: center; justify-content: center; }
+.stick .knob { width: 54px; height: 54px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); pointer-events: none; }
+
+.endcard { background: radial-gradient(circle at 50% 30%, rgba(255, 241, 214, 0.86), rgba(195, 170, 235, 0.86)); }
+.endcard .card { background: var(--cream); border-radius: 28px; padding: 22px 22px 26px; max-width: 520px; width: 100%; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25); border: 4px solid var(--marigold); }
+.endcard h2 { font-size: clamp(32px, 8vw, 48px); margin: 4px 0 6px; color: var(--lav-d); line-height: 1.05; }
+.endcard p { font-size: 19px; white-space: pre-line; margin: 8px 0 8px; }
+.endcard .big { font-size: 19px; padding: 10px 24px; }
+
+.flash { position: fixed; inset: 0; background: #fff; z-index: 30; pointer-events: none; }
+.photo { background: rgba(40, 30, 60, 0.55); z-index: 25; }
+.polaroid { background: #fff; padding: 12px 12px 10px; border-radius: 6px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35); transform: rotate(-2deg); max-width: min(90vw, 560px); }
+.polaroid img { width: 100%; display: block; border-radius: 2px; }
+.polaroid .caption { margin-top: 8px; font-weight: 700; font-size: 18px; }
+.polaroid.small { max-width: 100%; margin: 6px auto 4px; transform: rotate(-1.5deg); }
+.polaroid.small .caption { font-size: 15px; }
+.endcard .card { max-height: 94vh; overflow: auto; }
+
+@keyframes pop { from { transform: translateX(-50%) scale(0.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.actions button, .choice { animation-name: none; }
+@keyframes bob { 50% { transform: translateY(-3px); } }
+
+/* restart button: always at the top right, above every overlay */
+.topbtns { position: fixed; top: 10px; right: 12px; z-index: 60; display: flex; gap: 8px; }
+.restart { font: inherit; font-weight: 800; font-size: 15px; padding: 6px 14px; border-radius: 999px; border: 3px solid #fff; background: var(--panel); color: var(--ink); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); cursor: pointer; }
+.restart:hover { background: var(--marigold); color: #fff; }
+@media (max-width: 600px) { .restart { font-size: 13px; padding: 4px 10px; } .hud { padding-right: 110px; } }
+/* movie intro: black bars + freeze-frame polaroid card */
+.lbar { position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 40; transition: height 0.6s ease; pointer-events: none; }
+.lbar.top { top: 0; }
+.lbar.bottom { bottom: 0; }
+.lbar.on { height: 11vh; }
+.introcard { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; gap: 34px; padding: 12vh 16px; cursor: pointer;
+  background: radial-gradient(ellipse at center, rgba(20, 12, 30, 0.25), rgba(20, 12, 30, 0.7)); animation: fadein 0.35s ease-out; }
+.introcard .polaroid.tilt { width: min(36vw, 300px); transform: rotate(-6deg); animation: drop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.introcard .polaroid img { aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 45%; }
+.introcard .polaroid .caption { font-size: 24px; text-align: center; color: #3b2a4d; }
+.introcard .who { color: #fff; max-width: 420px; text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5); }
+.introcard .this { font-size: 20px; letter-spacing: 6px; text-transform: uppercase; opacity: 0.85; animation: slidein 0.5s 0.15s ease-out both; }
+.introcard .big { font-size: 64px; font-weight: 800; line-height: 1; color: var(--marigold); animation: slidein 0.5s 0.25s ease-out both; }
+.introcard .aka { font-size: 19px; font-weight: 700; margin: 6px 0 10px; animation: slidein 0.5s 0.35s ease-out both; }
+.introcard ul { margin: 0; padding-left: 20px; font-size: 18px; line-height: 1.35; }
+.introcard li { margin: 3px 0; animation: slidein 0.45s ease-out both; }
+.introcard .tap { margin-top: 14px; font-size: 14px; opacity: 0.7; animation: bob 1s infinite; }
+@keyframes drop { from { transform: translateY(-60px) rotate(8deg) scale(1.15); opacity: 0; } to { transform: rotate(-6deg); opacity: 1; } }
+@keyframes slidein { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 700px) {
+  .introcard { flex-direction: column; gap: 14px; padding: 12vh 16px; }
+  .introcard .polaroid.tilt { width: min(52vw, 220px); }
+  .introcard .big { font-size: 44px; }
+  .introcard .who { text-align: center; }
+  .introcard ul { list-style: none; padding: 0; font-size: 16px; }
+}
+.restart[aria-pressed="false"] { opacity: 0.7; }
+@media (max-width: 600px) { .hud { padding-right: 200px; } .topbtns { gap: 5px; } }
+
+/* bought gifts, under the item slots */
+.gifts { background: var(--panel); padding: 2px 12px; border-radius: 999px; border: 2px solid #fff; font-weight: 700; font-size: 14px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* full-screen warm fade with a line of text (above the dialog and actions, below the shop) */
+.fade { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px 16px; text-align: center; pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(84, 46, 58, 0.96), rgba(24, 13, 28, 0.98) 75%); opacity: 0; transition: opacity 0.6s ease; }
+.fade.on { opacity: 1; }
+.fadetext { color: var(--cream); font-weight: 800; font-size: clamp(26px, 6.5vw, 46px); line-height: 1.2; max-width: 760px; text-shadow: 0 0 26px rgba(255, 165, 31, 0.45), 0 4px 14px rgba(0, 0, 0, 0.5);
+  opacity: 0; transform: translateY(12px); transition: opacity 0.45s ease, transform 0.45s ease; }
+.fade.on .fadetext { opacity: 1; transform: none; transition-delay: 0.25s; }
+
+/* the gift shop stall */
+.shop { position: fixed; inset: 0; z-index: 55; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: radial-gradient(circle at 50% 40%, rgba(70, 36, 50, 0.38), rgba(28, 15, 34, 0.66)); animation: fadein 0.25s ease-out; }
+.shopcard { position: relative; width: min(100%, 780px); max-height: 100%; overflow-x: hidden; overflow-y: auto; background: var(--cream); border-radius: 28px; border: 4px solid var(--marigold);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); padding: 0 18px 20px; text-align: center; animation: shopin 0.4s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
+.shopcard .awning { position: relative; height: 30px; margin: 0 -18px 16px; background: repeating-linear-gradient(90deg, var(--marigold) 0 28px, #fff3dc 28px 56px); }
+.shopcard .awning::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px;
+  background: radial-gradient(circle at 14px 0, var(--marigold) 13px, transparent 14px) 0 0 / 56px 14px repeat-x,
+    radial-gradient(circle at 42px 0, #fff3dc 13px, transparent 14px) 0 0 / 56px 14px repeat-x; }
+.shopcard .garland { font-size: 24px; margin: 0; }
+.shopcard h2 { font-size: clamp(30px, 7vw, 44px); margin: 0; line-height: 1.05; color: var(--lav-d); text-shadow: 0 3px 0 #fff; }
+.shopcard .pocket { display: inline-block; margin: 8px 0 14px; padding: 3px 14px; border-radius: 999px; background: #fff; border: 2px dashed var(--marigold); font-weight: 800; font-size: 17px; }
+.wares { display: flex; gap: 14px; justify-content: center; align-items: stretch; }
+.ware { flex: 1 1 0; min-width: 0; max-width: 250px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 12px 12px; border-radius: 20px; border: 3px solid #fff;
+  background: linear-gradient(#fff, #fff1dc); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.13); animation: wareup 0.4s ease-out both; }
+.ware:nth-child(2) { animation-delay: 0.08s; }
+.ware:nth-child(3) { animation-delay: 0.16s; }
+.ware .icon { font-size: 58px; line-height: 1.1; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.15)); }
+.ware .name { font-weight: 800; font-size: 19px; line-height: 1.15; }
+.ware .price { font-weight: 800; font-size: 14px; line-height: 1.3; color: #fff; background: #b5462d; padding: 1px 10px; border-radius: 999px; }
+.ware .line { flex: 1; font-size: 15px; line-height: 1.3; opacity: 0.85; margin: 2px 0 8px; }
+.ware .buy { font: inherit; font-weight: 800; font-size: 18px; width: 100%; padding: 7px 12px; border: 0; border-radius: 999px; background: var(--marigold); color: #fff;
+  box-shadow: 0 5px 0 #d97a00, 0 8px 16px rgba(0, 0, 0, 0.15); cursor: pointer; }
+.ware .buy:hover:not(:disabled) { filter: brightness(1.06); }
+.ware .buy:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #d97a00; }
+.ware .buy:disabled { cursor: default; font-size: 15px; line-height: 1.25; background: #ece4f3; color: #7a6690; box-shadow: none; }
+.ware.locked { background: linear-gradient(#fcfaff, #efe8f6); }
+.ware.locked .icon { filter: grayscale(1); opacity: 0.5; }
+.ware.owned { box-shadow: 0 0 0 3px #7cc47f, 0 6px 16px rgba(0, 0, 0, 0.13); }
+.ware.owned .buy:disabled { background: #dcf2da; color: #2f7a3a; }
+.shopcard .leave { margin-top: 18px; font-size: 18px; padding: 8px 24px; }
+.shopcard kbd { font: inherit; font-size: 12px; opacity: 0.7; border: 1px solid currentColor; border-radius: 5px; padding: 0 5px; margin-left: 4px; }
+@media (pointer: coarse) { .shopcard kbd { display: none; } }
+@keyframes shopin { from { transform: translateY(16px) scale(0.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes wareup { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* phones: stack the gifts as compact rows (icon on the left) */
+@media (max-width: 640px) {
+  .shop { padding: 12px; }
+  .shopcard { padding: 0 12px 14px; border-radius: 24px; }
+  .shopcard .awning { margin: 0 -12px 14px; height: 24px; }
+  .shopcard .garland { font-size: 20px; }
+  .shopcard .pocket { font-size: 15px; margin: 6px 0 10px; }
+  .wares { flex-direction: column; gap: 10px; }
+  .ware { max-width: none; flex: none; display: grid; grid-template-columns: 54px minmax(0, 1fr); grid-template-areas: 'icon name' 'icon price' 'line line' 'buy buy';
+    column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; padding: 10px 12px; }
+  .ware .icon { grid-area: icon; font-size: 44px; text-align: center; }
+  .ware .name { grid-area: name; font-size: 18px; }
+  .ware .price { grid-area: price; justify-self: start; }
+  .ware .line { grid-area: line; font-size: 14px; margin: 4px 0 6px; }
+  .ware .buy { grid-area: buy; font-size: 17px; }
+  .shopcard .leave { margin-top: 14px; font-size: 17px; }
+}
+/* short screens (landscape phones): squeeze the header */
+@media (max-height: 520px) {
+  .shopcard .garland { display: none; }
+  .shopcard .awning { height: 18px; margin-bottom: 12px; }
+  .ware .icon { font-size: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shop, .shopcard, .ware { animation: none; }
+  .fade, .fadetext, .fade.on .fadetext { transition: opacity 0.3s ease; transition-delay: 0s; transform: none; }
+}

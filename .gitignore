@@ -1,0 +1,28 @@
+# --- dependencies and builds
+node_modules/
+game/dist/
+game/legacy/dist/
+game/.firebase/
+*.log
+firebase-debug.log*
+
+# --- Blender backups / autosaves
+*.blend1
+*.blend@
+blender/__pycache__/
+
+# --- generated previews and leftovers (re-made by the Blender scripts)
+renders/
+game/assets/tex/
+
+# --- private family source material (house photos, CCTV stills, the 3D scans of the family).
+# Kept out of git on purpose: personal and large (~180 MB, two files are ~58 MB).
+# The game only needs the rigged models in game/assets/. Delete this line to commit them too.
+reference/
+
+# --- OS / editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
