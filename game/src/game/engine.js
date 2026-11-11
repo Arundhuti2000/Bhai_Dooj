@@ -1109,7 +1109,9 @@ export function createGame({ scene, camera, gl, controls, house, chars, meta, la
     // lives in his pocket), and maybe runs off to buy her something better
     await sayAll(CONFIG.ceremony.askGift);
     const tierOf = (g) => SI[g].tier;
-    const options = bought.size ? [...bought].sort((a, b) => tierOf(a) - tierOf(b)) : ['biscuit'];
+    // what he bought, plus the ₹5 biscuit as a prank (it always lives in his pocket)
+    const options = [...new Set(['biscuit', ...bought])].sort((a, b) => tierOf(a) - tierOf(b));
+    const optionLabel = (o) => (o === 'biscuit' && !bought.has('biscuit') && bought.size ? SI.biscuit.prank : SI[o].give);
     const MAKE = { biscuit: makeBiscuit, box: makeGift, nintendo: makeNintendo };
     const giftAnchor = () => new THREE.Vector3(0, hy, 0.28);
     let gift = null, caught = false;
@@ -1191,15 +1193,22 @@ export function createGame({ scene, camera, gl, controls, house, chars, meta, la
         await sayAll(CONFIG.money.caught);   // Papa recognises his ₹500
       }
     }
-    let id = options[await choose(options.map((o) => SI[o].give))] ?? options[0];
+    let id = options[await choose(options.map(optionLabel))] ?? options[0];
     await giveGift(id);
-    // not good enough? run to the shop for something better (biscuit -> box -> Nintendo)
+    // she has to end up happy: biscuit -> something better -> the Nintendo, every time.
+    // If the better gift is already in his pocket, the biscuit was just a prank; otherwise he
+    // runs to the shop for it.
     while (tierOf(id) < 2) {
       const up = CONFIG.shop.upgrade[tierOf(id)];
-      if ((await choose([up.go, up.stay])) === 1) {
-        await sayAll(up.stayLines);
-        break;
+      const pocketed = [...bought].filter((k) => tierOf(k) > tierOf(id)).sort((a, b) => tierOf(a) - tierOf(b));
+      if (pocketed.length) {
+        await choose([up.reveal]);
+        await sayAll(up.revealLines);
+        id = pocketed[0];
+        await giveGift(id);
+        continue;
       }
+      await choose([up.go]);
       await sayAll(up.goLines);
       set({ fade: CONFIG.shop.tripOut });
       await wait(1.2);
@@ -1457,8 +1466,9 @@ export function createGame({ scene, camera, gl, controls, house, chars, meta, la
     for (const it of items) it.g.visible = false;
     const look = V(2.3, -1.6, 1.0);
     const cam = params.get('cam') || 'front';
-    const camPos = { front: V(2.3, -6.4, 1.4), side: V(7.6, -2.2, 1.3), arms: V(2.3, -4.6, 1.3), papa: V(4.4, -3.4, 1.45) }[cam];
+    const camPos = { front: V(2.3, -6.4, 1.4), side: V(7.6, -2.2, 1.3), arms: V(2.3, -4.6, 1.3), papa: V(4.4, -3.4, 1.45), papaback: V(4.4, -0.25, 1.45) }[cam];
     if (cam === 'papa') look.copy(V(4.4, -1.6, 1.25));
+    if (cam === 'papaback') look.copy(V(4.4, -1.6, 1.05));
     shot(camPos, look, false);
     const thala = makeThala();
     scene.add(thala);

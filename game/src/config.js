@@ -135,6 +135,7 @@ export const CONFIG = {
         icon: '🍪', name: '₹5 Cream Biscuit', price: '₹5', tier: 0,
         line: 'The classic. Tradition is tradition.',
         give: '🍪 Give the ₹5 cream biscuit',
+        prank: '😏 Prank her: give a ₹5 cream biscuit',
         bought: 'Bought a ₹5 cream biscuit 🍪 …again',
       },
       box: {
@@ -168,19 +169,20 @@ export const CONFIG = {
         ['B', 'Anything for you, {U} 😎'],
       ],
     },
-    // after she gets a biscuit (0) or the gift box (1): go and buy something better, or stop there
+    // after she gets a biscuit (0) or the gift box (1) he always has to make her happier:
+    // "reveal" if the better gift is already in his pocket, otherwise "go" to the shop
     upgrade: [
       {
         go: '🛍️ Make her happy: go buy her something',
-        stay: '😎 Nah, the biscuit is enough',
         goLines: [['B', 'Wait right here, {U}. Two minutes!'], ['S', 'Where are you going?!']],
-        stayLines: [['S', "Hmph. Fine, I'm keeping it. But next year I want a REAL gift 😤"], ['M', '{N}… 🤦‍♀️']],
+        reveal: '😜 Just kidding! Give her the real gift',
+        revealLines: [['B', 'Hahaha, your FACE! 😂 Kidding, kidding…'], ['S', '{Bh}!!! 😤'], ['B', 'Okay okay, here is your REAL gift 😎']],
       },
       {
         go: '🎮 Make her even happier: Nintendo Switch!',
-        stay: "😌 That's enough gifting for this year",
         goLines: [['B', 'Hold on… I will be right back! 🏃'], ['S', '{Bi}?! Where are you running?!']],
-        stayLines: [['S', 'Okay okay, this is actually so sweet. Thank you {Bi} ❤️']],
+        reveal: '🎮 Wait… there is one more gift!',
+        revealLines: [['B', 'Actually… there is one more thing 😏'], ['S', 'MORE?! 😳']],
       },
     ],
   },

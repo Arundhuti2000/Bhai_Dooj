@@ -339,6 +339,42 @@ def heat_proxy(L, rig, Hh, voxel):
     return proxy, pm2, pw
 
 
+def torso_bands(L, rig, Hh):
+    """Per height band below the armpits: the x-extent of the torso (the run of vertices
+    around x = 0; in the A-pose the arms are separate runs further out)."""
+    sh_z = rig.data.bones["upperarm_L"].head_local.z
+    step, gap = 0.01 * Hh, 0.012 * Hh
+    P = [v.co for v in L.data.vertices]
+    bands, armpit = {}, None
+    z = sh_z - 0.02 * Hh
+    while z > 0.42 * Hh:
+        xs = [p.x for p in P if abs(p.z - z) < step / 2]
+        rr = runs(xs, gap) if xs else []
+        mid = next((r for r in rr if r[0] <= 0.0 <= r[1]), None)
+        if armpit is None and len(rr) >= 3 and mid:
+            armpit = z                      # the arms have come away from the body
+        if armpit is not None and mid and len(rr) >= 3:   # only where the arms are clearly apart
+            bands[int(z / step)] = (mid[0], mid[1])
+        z -= step
+    # a band much wider than the others has an arm merged into it: leave those alone
+    if bands:
+        widths = sorted(b - a for a, b in bands.values())
+        med = widths[len(widths) // 2]
+        bands = {k: v for k, v in bands.items() if v[1] - v[0] <= med * 1.12}
+    print("  armpit at %.2f m, %d torso bands" % (armpit or 0, len(bands)))
+    return {"bands": bands, "step": step, "armpit": armpit}
+
+
+def torso_factor(torso, co, Hh):
+    """1 = this vertex is on the torso below the armpit (no arm weights), fading in over 3 cm."""
+    if torso["armpit"] is None:
+        return 0.0
+    b = torso["bands"].get(int(co.z / torso["step"]))
+    if not b or not (b[0] - 0.004 <= co.x <= b[1] + 0.004):
+        return 0.0
+    return max(0.0, min(1.0, (torso["armpit"] - co.z) / (0.03 * Hh)))
+
+
 def skin(L, rig, Hh):
     # bone heat on a watertight copy; retry other voxel sizes if the solver gives up
     for voxel in (0.011, 0.014, 0.0085, 0.018):
@@ -361,6 +397,10 @@ def skin(L, rig, Hh):
     # so spectacles and ears don't stretch when the head turns; a short blend over the neck
     head_z = rig.data.bones["head"].head_local.z + 0.015 * Hh
     blend = 0.03 * Hh
+    # the sides of the body below the armpits move with the torso only: otherwise lowering the
+    # A-pose arms drags the shirt/jacket sides inwards and gives a pinched "waist"
+    torso = torso_bands(L, rig, Hh)
+    ARM = ("upperarm_", "forearm_", "hand_")
     for v in L.data.vertices:
         acc, tot = {}, 0.0
         for co, i, d in kd.find_n(v.co, 4):
@@ -378,6 +418,12 @@ def skin(L, rig, Hh):
         if t > 0:
             w = {bn: x * (1 - t) for bn, x in w.items()}
             w["head"] = w.get("head", 0.0) + t
+        k = torso_factor(torso, v.co, Hh)
+        if k > 0 and any(bn.startswith(ARM) for bn in w):
+            w = {bn: (x * (1 - k) if bn.startswith(ARM) else x) for bn, x in w.items()}
+            s2 = sum(w.values())
+            if s2 > 1e-6:
+                w = {bn: x / s2 for bn, x in w.items()}
         for bn, x in w.items():
             if x > 0.01:
                 groups[bn].add([v.index], x, "REPLACE")
